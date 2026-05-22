@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls /c/Users/dexte/.claude/plans/ 2>&1 | head -10)",
+      "Read(//c/Users/dexte/.claude/plans//**)",
+      "Bash(ls /c/Users/dexte/.claude/projects/c--Repos-BudgetTracker/memory/ 2>&1)",
+      "Read(//c/Users/dexte/.claude/projects/c--Repos-BudgetTracker/memory//**)",
+      "Bash(npm --version)",
+      "Bash(npx --yes create-next-app@latest . --ts --eslint --app --no-tailwind --no-src-dir --import-alias \"@/*\" --use-npm --yes)",
+      "Bash(mkdir -p /c/Repos/budget-tracker && rmdir /c/Repos/BudgetTracker 2>&1 && echo \"Renamed OK\")",
+      "Bash(rmdir BudgetTracker)",
+      "Read(//c/c/Repos/**)",
+      "Bash(npx --yes create-next-app@latest budget-tracker --ts --eslint --app --no-tailwind --no-src-dir --import-alias \"@/*\" --use-npm --skip-install --yes)",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(npm test *)"
+    ],
+    "additionalDirectories": [
+      "C:\\Repos"
+    ]
+  }
+}
