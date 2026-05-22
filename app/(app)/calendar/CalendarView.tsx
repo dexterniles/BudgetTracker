@@ -1,22 +1,42 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import Link from 'next/link';
-import { Anchor, Card, Center, Group, Stack, Text, Title } from '@mantine/core';
+import {
+  ActionIcon,
+  Anchor,
+  Box,
+  Button,
+  Center,
+  Group,
+  Popover,
+  Stack,
+  Text,
+} from '@mantine/core';
 import { MonthPicker } from '@mantine/dates';
+import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
+import { useDisclosure } from '@mantine/hooks';
 import dayjs from 'dayjs';
 import { formatCurrency } from '@/lib/format';
 import { BillStatusBadge } from '@/components/bills/BillStatusBadge';
+import { LinkAnchor } from '@/components/ui/links';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { SectionCard } from '@/components/ui/SectionCard';
 import type { Bill } from '@/types/database';
 
 type Props = {
   bills: Bill[];
-  initialMonth: string; // YYYY-MM-01
+  initialMonth: string;
 };
 
 export function CalendarView({ bills, initialMonth }: Props) {
-  const [month, setMonth] = useState<Date>(dayjs(initialMonth).toDate());
+  const [month, setMonth] = useState<string>(initialMonth);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [popoverOpened, popover] = useDisclosure(false);
+
+  const stepMonth = (delta: number) => {
+    setMonth(dayjs(month).add(delta, 'month').startOf('month').format('YYYY-MM-DD'));
+  };
+  const goToToday = () => setMonth(dayjs().startOf('month').format('YYYY-MM-DD'));
 
   const byDay = useMemo(() => {
     const map = new Map<string, Bill[]>();
@@ -40,8 +60,7 @@ export function CalendarView({ bills, initialMonth }: Props) {
     0,
   );
 
-  // Build calendar grid: weeks of the visible month
-  const firstDow = monthStart.day(); // 0=Sunday
+  const firstDow = monthStart.day();
   const daysInMonth = monthStart.daysInMonth();
   const cells: Array<{ date: dayjs.Dayjs | null }> = [];
   for (let i = 0; i < firstDow; i++) cells.push({ date: null });
@@ -54,22 +73,70 @@ export function CalendarView({ bills, initialMonth }: Props) {
   const dayBills = selectedDay ? byDay.get(selectedDay) ?? [] : [];
 
   return (
-    <Stack gap="md">
-      <Group justify="space-between" wrap="wrap" align="flex-end">
-        <div>
-          <Title order={2}>Calendar</Title>
-          <Text c="dimmed">
-            {monthStart.format('MMMM YYYY')} · {formatCurrency(monthTotal)} due
-          </Text>
-        </div>
-        <MonthPicker value={month} onChange={(v) => setMonth(v ? new Date(v) : new Date())} />
-      </Group>
+    <Stack gap="lg">
+      <PageHeader
+        title="Calendar"
+        description={`${formatCurrency(monthTotal)} due this month`}
+        action={
+          <Group gap={4} wrap="nowrap">
+            <ActionIcon
+              variant="subtle"
+              color="gray"
+              onClick={() => stepMonth(-1)}
+              aria-label="Previous month"
+            >
+              <IconChevronLeft size={16} />
+            </ActionIcon>
+            <Popover
+              opened={popoverOpened}
+              onChange={popover.toggle}
+              position="bottom"
+              shadow="md"
+              radius="md"
+              withArrow
+            >
+              <Popover.Target>
+                <Button
+                  variant="subtle"
+                  color="gray"
+                  size="sm"
+                  onClick={popover.toggle}
+                  style={{ minWidth: 140 }}
+                >
+                  {monthStart.format('MMMM YYYY')}
+                </Button>
+              </Popover.Target>
+              <Popover.Dropdown p="xs">
+                <MonthPicker
+                  value={month}
+                  onChange={(v) => {
+                    if (v) setMonth(v);
+                    popover.close();
+                  }}
+                  size="xs"
+                />
+                <Button variant="subtle" size="xs" fullWidth mt="xs" onClick={() => { goToToday(); popover.close(); }}>
+                  Today
+                </Button>
+              </Popover.Dropdown>
+            </Popover>
+            <ActionIcon
+              variant="subtle"
+              color="gray"
+              onClick={() => stepMonth(1)}
+              aria-label="Next month"
+            >
+              <IconChevronRight size={16} />
+            </ActionIcon>
+          </Group>
+        }
+      />
 
-      <Card p="sm">
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
+      <SectionCard title={monthStart.format('MMMM YYYY')}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6 }}>
           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
             <Center key={d} p={4}>
-              <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
+              <Text size="xs" c="dimmed" tt="uppercase" fw={600} style={{ letterSpacing: 0.4 }}>
                 {d}
               </Text>
             </Center>
@@ -81,8 +148,8 @@ export function CalendarView({ bills, initialMonth }: Props) {
                   <div
                     key={`${wi}-${di}-empty`}
                     style={{
-                      minHeight: 70,
-                      borderRadius: 6,
+                      minHeight: 78,
+                      borderRadius: 10,
                       background: 'transparent',
                     }}
                   />
@@ -96,38 +163,40 @@ export function CalendarView({ bills, initialMonth }: Props) {
               );
               const isToday = cell.date.isSame(dayjs(), 'day');
               const isSelected = selectedDay === key;
-              const intensity = Math.min(1, total / 500); // visual hint, caps at $500/day
+              const intensity = Math.min(1, total / 500);
               return (
                 <button
                   key={key}
                   onClick={() => setSelectedDay(isSelected ? null : key)}
                   style={{
                     border: isSelected
-                      ? '2px solid var(--mantine-color-teal-6)'
+                      ? 'none'
                       : isToday
-                        ? '1px solid var(--mantine-color-teal-4)'
+                        ? '1px solid var(--mantine-color-teal-5)'
                         : '1px solid var(--mantine-color-default-border)',
-                    background:
-                      total > 0
+                    background: isSelected
+                      ? 'var(--mantine-color-teal-filled)'
+                      : total > 0
                         ? `rgba(20, 184, 166, ${0.08 + intensity * 0.25})`
                         : 'transparent',
-                    borderRadius: 6,
-                    padding: 6,
-                    minHeight: 70,
+                    color: isSelected ? 'white' : 'inherit',
+                    borderRadius: 10,
+                    padding: 8,
+                    minHeight: 78,
                     cursor: 'pointer',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'flex-start',
                     justifyContent: 'space-between',
                     textAlign: 'left',
-                    color: 'inherit',
+                    transition: 'background-color 120ms ease, border-color 120ms ease',
                   }}
                 >
-                  <Text size="xs" fw={isToday ? 700 : 500}>
+                  <Text size="xs" fw={isToday ? 700 : 500} c="inherit">
                     {cell.date.date()}
                   </Text>
                   {total > 0 && (
-                    <Text size="xs" fw={600}>
+                    <Text size="xs" fw={600} c="inherit">
                       {formatCurrency(total)}
                     </Text>
                   )}
@@ -136,33 +205,43 @@ export function CalendarView({ bills, initialMonth }: Props) {
             }),
           )}
         </div>
-      </Card>
+      </SectionCard>
 
       {selectedDay && (
-        <Card>
-          <Group justify="space-between" mb="sm">
-            <Title order={4}>{dayjs(selectedDay).format('dddd, MMM D, YYYY')}</Title>
-            <Anchor onClick={() => setSelectedDay(null)} size="sm">
+        <SectionCard
+          title={dayjs(selectedDay).format('dddd, MMM D, YYYY')}
+          action={
+            <Anchor onClick={() => setSelectedDay(null)} size="sm" style={{ cursor: 'pointer' }}>
               Close
             </Anchor>
-          </Group>
+          }
+          padding={0}
+        >
           {dayBills.length === 0 ? (
-            <Text c="dimmed" size="sm">
-              No bills due that day.
-            </Text>
+            <Box p="lg">
+              <Text c="dimmed" size="sm">
+                No bills due that day.
+              </Text>
+            </Box>
           ) : (
-            <Stack gap="xs">
-              {dayBills.map((b) => (
+            <Stack gap={0}>
+              {dayBills.map((b, idx) => (
                 <Group
                   key={b.id}
                   justify="space-between"
-                  py="xs"
-                  style={{ borderBottom: '1px solid var(--mantine-color-default-border)' }}
+                  px="lg"
+                  py="sm"
+                  style={{
+                    borderBottom:
+                      idx < dayBills.length - 1
+                        ? '1px solid var(--mantine-color-default-border)'
+                        : 'none',
+                  }}
                 >
                   <Group gap="xs">
-                    <Anchor component={Link} href={`/bills/${b.id}`} fw={500}>
+                    <LinkAnchor href={`/bills/${b.id}`} fw={500}>
                       {b.name}
-                    </Anchor>
+                    </LinkAnchor>
                     <BillStatusBadge status={b.status} />
                   </Group>
                   <Text fw={600}>{formatCurrency(b.amount)}</Text>
@@ -170,7 +249,7 @@ export function CalendarView({ bills, initialMonth }: Props) {
               ))}
             </Stack>
           )}
-        </Card>
+        </SectionCard>
       )}
     </Stack>
   );

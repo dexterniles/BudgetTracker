@@ -3,8 +3,8 @@
 import { useState, useTransition } from 'react';
 import {
   ActionIcon,
+  Box,
   Button,
-  Card,
   Group,
   NumberInput,
   Stack,
@@ -19,6 +19,7 @@ import dayjs from 'dayjs';
 import { deletePayment, recordPayment } from '@/app/(app)/bills/actions';
 import { formatCurrency } from '@/lib/format';
 import type { BillPayment } from '@/types/database';
+import { SectionCard } from '@/components/ui/SectionCard';
 
 type Props = {
   billId: string;
@@ -28,7 +29,7 @@ type Props = {
 
 export function PaymentHistory({ billId, remaining, payments }: Props) {
   const [amount, setAmount] = useState<number | string>('');
-  const [date, setDate] = useState<Date | null>(new Date());
+  const [date, setDate] = useState<string | null>(dayjs().format('YYYY-MM-DD'));
   const [note, setNote] = useState('');
   const [pending, startTransition] = useTransition();
 
@@ -45,7 +46,7 @@ export function PaymentHistory({ billId, remaining, payments }: Props) {
     }
     const fd = new FormData();
     fd.set('amount', String(amt));
-    fd.set('paid_date', dayjs(date).format('YYYY-MM-DD'));
+    fd.set('paid_date', date);
     fd.set('note', note);
     startTransition(async () => {
       try {
@@ -78,10 +79,9 @@ export function PaymentHistory({ billId, remaining, payments }: Props) {
 
   return (
     <Stack gap="md">
-      <Card>
+      <SectionCard title="Record a payment">
         <form onSubmit={handleSubmit}>
           <Stack>
-            <Text fw={600}>Record a payment</Text>
             <Group grow>
               <NumberInput
                 label="Amount"
@@ -97,7 +97,7 @@ export function PaymentHistory({ billId, remaining, payments }: Props) {
               <DatePickerInput
                 label="Date"
                 value={date}
-                onChange={(v) => setDate(v ? new Date(v) : null)}
+                onChange={setDate}
                 required
               />
             </Group>
@@ -113,33 +113,32 @@ export function PaymentHistory({ billId, remaining, payments }: Props) {
             </Group>
           </Stack>
         </form>
-      </Card>
+      </SectionCard>
 
-      <Card>
-        <Text fw={600} mb="sm">
-          Payment history
-        </Text>
+      <SectionCard title="Payment history" padding={0}>
         {payments.length === 0 ? (
-          <Text c="dimmed" size="sm">
-            No payments recorded yet.
-          </Text>
+          <Box p="lg">
+            <Text c="dimmed" size="sm">
+              No payments recorded yet.
+            </Text>
+          </Box>
         ) : (
-          <Table verticalSpacing="xs">
+          <Table verticalSpacing="sm" highlightOnHover>
             <Table.Thead>
               <Table.Tr>
-                <Table.Th>Date</Table.Th>
+                <Table.Th pl="lg">Date</Table.Th>
                 <Table.Th>Amount</Table.Th>
                 <Table.Th>Note</Table.Th>
-                <Table.Th />
+                <Table.Th pr="lg" />
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
               {payments.map((p) => (
                 <Table.Tr key={p.id}>
-                  <Table.Td>{dayjs(p.paid_date).format('MMM D, YYYY')}</Table.Td>
+                  <Table.Td pl="lg">{dayjs(p.paid_date).format('MMM D, YYYY')}</Table.Td>
                   <Table.Td>{formatCurrency(p.amount)}</Table.Td>
                   <Table.Td>{p.note ?? ''}</Table.Td>
-                  <Table.Td>
+                  <Table.Td pr="lg">
                     <ActionIcon
                       variant="subtle"
                       color="red"
@@ -155,7 +154,7 @@ export function PaymentHistory({ billId, remaining, payments }: Props) {
             </Table.Tbody>
           </Table>
         )}
-      </Card>
+      </SectionCard>
     </Stack>
   );
 }

@@ -4,7 +4,6 @@ import { useState, useTransition } from 'react';
 import { Button, Group, Select, Stack } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
 import { notifications } from '@mantine/notifications';
-import dayjs from 'dayjs';
 import { saveSettings } from './actions';
 
 type Props = {
@@ -13,9 +12,7 @@ type Props = {
 };
 
 export function SettingsForm({ initialAnchor, initialCurrency }: Props) {
-  const [date, setDate] = useState<Date | null>(
-    initialAnchor ? dayjs(initialAnchor).toDate() : null,
-  );
+  const [date, setDate] = useState<string | null>(initialAnchor);
   const [currency, setCurrency] = useState<string>(initialCurrency || 'USD');
   const [pending, startTransition] = useTransition();
 
@@ -26,7 +23,7 @@ export function SettingsForm({ initialAnchor, initialCurrency }: Props) {
       return;
     }
     const fd = new FormData();
-    fd.set('pay_anchor_date', dayjs(date).format('YYYY-MM-DD'));
+    fd.set('pay_anchor_date', date);
     fd.set('currency', currency);
     startTransition(async () => {
       try {
@@ -48,7 +45,7 @@ export function SettingsForm({ initialAnchor, initialCurrency }: Props) {
           label="Pay anchor date"
           description="Any recent paycheck date. Pay periods are calculated as 14-day windows from this date."
           value={date}
-          onChange={(v) => setDate(v ? new Date(v) : null)}
+          onChange={setDate}
           required
         />
         <Select

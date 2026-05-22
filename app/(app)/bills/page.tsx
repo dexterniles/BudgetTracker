@@ -1,8 +1,9 @@
-import Link from 'next/link';
-import { Button, Card, Group, Stack, Text, Title } from '@mantine/core';
+import { Card, Stack, Text } from '@mantine/core';
 import { IconPlus } from '@tabler/icons-react';
 import { createClient } from '@/lib/supabase/server';
 import type { Bill } from '@/types/database';
+import { LinkButton } from '@/components/ui/links';
+import { PageHeader } from '@/components/ui/PageHeader';
 import { BillsList } from './BillsList';
 
 export default async function BillsPage() {
@@ -21,27 +22,27 @@ export default async function BillsPage() {
   const bills = (data ?? []) as Bill[];
 
   return (
-    <Stack gap="md">
-      <Group justify="space-between" align="flex-end">
-        <div>
-          <Title order={2}>Bills</Title>
-          <Text c="dimmed">{bills.length} total</Text>
-        </div>
-        <Button component={Link} href="/bills/new" leftSection={<IconPlus size={16} />}>
-          New bill
-        </Button>
-      </Group>
+    <Stack gap="lg">
+      <PageHeader
+        title="Bills"
+        description={`${bills.length} total`}
+        action={
+          <LinkButton href="/bills/new" leftSection={<IconPlus size={16} />}>
+            New bill
+          </LinkButton>
+        }
+      />
 
       {bills.length === 0 ? (
         <Card p="xl">
           <Stack align="center" gap="sm">
             <Text fw={600}>No bills yet</Text>
-            <Text c="dimmed" size="sm">
+            <Text c="dimmed" size="sm" ta="center">
               Add your first bill to get started.
             </Text>
-            <Button component={Link} href="/bills/new" leftSection={<IconPlus size={16} />}>
+            <LinkButton href="/bills/new" leftSection={<IconPlus size={16} />}>
               Add a bill
-            </Button>
+            </LinkButton>
           </Stack>
         </Card>
       ) : (

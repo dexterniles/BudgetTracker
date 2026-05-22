@@ -1,8 +1,8 @@
-import Link from 'next/link';
-import { Card, Group, Progress, Stack, Text } from '@mantine/core';
+import { Group, Progress, Stack, Text } from '@mantine/core';
 import dayjs from 'dayjs';
 import { formatCurrency } from '@/lib/format';
 import type { Loan } from '@/types/database';
+import { LinkCard } from '@/components/ui/links';
 
 const TYPE_LABEL: Record<Loan['loan_type'], string> = {
   student: 'Student',
@@ -20,7 +20,7 @@ export function LoanCard({ loan }: { loan: Loan }) {
   const pct = principal > 0 ? (paid / principal) * 100 : 0;
 
   return (
-    <Card component={Link} href={`/loans/${loan.id}`} style={{ textDecoration: 'none' }}>
+    <LinkCard href={`/loans/${loan.id}`} style={{ textDecoration: 'none' }}>
       <Stack gap="xs">
         <Group justify="space-between" wrap="nowrap">
           <Stack gap={0} style={{ minWidth: 0 }}>
@@ -51,6 +51,6 @@ export function LoanCard({ loan }: { loan: Loan }) {
           )}
         </Group>
       </Stack>
-    </Card>
+    </LinkCard>
   );
 }

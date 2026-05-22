@@ -1,7 +1,7 @@
 'use client';
 
 import { useTransition } from 'react';
-import { ActionIcon, Card, Table, Text } from '@mantine/core';
+import { ActionIcon, Box, Table, Text } from '@mantine/core';
 import { IconTrash } from '@tabler/icons-react';
 import { modals } from '@mantine/modals';
 import { notifications } from '@mantine/notifications';
@@ -43,54 +43,52 @@ export function PaymentHistoryTable({
 
   if (payments.length === 0) {
     return (
-      <Card>
+      <Box p="lg">
         <Text c="dimmed" size="sm">
           No payments recorded yet.
         </Text>
-      </Card>
+      </Box>
     );
   }
 
   return (
-    <Card>
-      <Table verticalSpacing="xs" striped highlightOnHover>
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th>Date</Table.Th>
-            <Table.Th>Amount</Table.Th>
-            <Table.Th>Principal</Table.Th>
-            <Table.Th>Interest</Table.Th>
-            <Table.Th>Balance after</Table.Th>
-            <Table.Th />
+    <Table verticalSpacing="sm" highlightOnHover>
+      <Table.Thead>
+        <Table.Tr>
+          <Table.Th pl="lg">Date</Table.Th>
+          <Table.Th>Amount</Table.Th>
+          <Table.Th>Principal</Table.Th>
+          <Table.Th>Interest</Table.Th>
+          <Table.Th>Balance after</Table.Th>
+          <Table.Th pr="lg" />
+        </Table.Tr>
+      </Table.Thead>
+      <Table.Tbody>
+        {payments.map((p) => (
+          <Table.Tr key={p.id}>
+            <Table.Td pl="lg">{dayjs(p.payment_date).format('MMM D, YYYY')}</Table.Td>
+            <Table.Td>{formatCurrency(p.amount)}</Table.Td>
+            <Table.Td>
+              <Text c="teal">{formatCurrency(p.principal_portion)}</Text>
+            </Table.Td>
+            <Table.Td>
+              <Text c="dimmed">{formatCurrency(p.interest_portion)}</Text>
+            </Table.Td>
+            <Table.Td>{formatCurrency(p.balance_after)}</Table.Td>
+            <Table.Td pr="lg">
+              <ActionIcon
+                variant="subtle"
+                color="red"
+                onClick={() => handleDelete(p.id)}
+                aria-label="Delete payment"
+                disabled={pending}
+              >
+                <IconTrash size={14} />
+              </ActionIcon>
+            </Table.Td>
           </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          {payments.map((p) => (
-            <Table.Tr key={p.id}>
-              <Table.Td>{dayjs(p.payment_date).format('MMM D, YYYY')}</Table.Td>
-              <Table.Td>{formatCurrency(p.amount)}</Table.Td>
-              <Table.Td>
-                <Text c="teal">{formatCurrency(p.principal_portion)}</Text>
-              </Table.Td>
-              <Table.Td>
-                <Text c="dimmed">{formatCurrency(p.interest_portion)}</Text>
-              </Table.Td>
-              <Table.Td>{formatCurrency(p.balance_after)}</Table.Td>
-              <Table.Td>
-                <ActionIcon
-                  variant="subtle"
-                  color="red"
-                  onClick={() => handleDelete(p.id)}
-                  aria-label="Delete payment"
-                  disabled={pending}
-                >
-                  <IconTrash size={14} />
-                </ActionIcon>
-              </Table.Td>
-            </Table.Tr>
-          ))}
-        </Table.Tbody>
-      </Table>
-    </Card>
+        ))}
+      </Table.Tbody>
+    </Table>
   );
 }

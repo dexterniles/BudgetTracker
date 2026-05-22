@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Group, SegmentedControl, Stack, Text, TextInput } from '@mantine/core';
+import { Card, Group, SegmentedControl, Stack, Text, TextInput } from '@mantine/core';
 import { IconSearch } from '@tabler/icons-react';
 import { BillCard } from '@/components/bills/BillCard';
 import type { Bill } from '@/types/database';
@@ -24,25 +24,27 @@ export function BillsList({ bills }: { bills: Bill[] }) {
 
   return (
     <Stack gap="md">
-      <Group gap="sm" wrap="wrap">
-        <SegmentedControl
-          value={filter}
-          onChange={(v) => setFilter(v as Filter)}
-          data={[
-            { label: 'All', value: 'all' },
-            { label: 'Unpaid', value: 'unpaid' },
-            { label: 'Partial', value: 'partial' },
-            { label: 'Paid', value: 'paid' },
-          ]}
-        />
-        <TextInput
-          placeholder="Search"
-          leftSection={<IconSearch size={14} />}
-          value={query}
-          onChange={(e) => setQuery(e.currentTarget.value)}
-          style={{ flex: 1, minWidth: 200 }}
-        />
-      </Group>
+      <Card p="sm">
+        <Group gap="sm" wrap="wrap">
+          <SegmentedControl
+            value={filter}
+            onChange={(v) => setFilter(v as Filter)}
+            data={[
+              { label: 'All', value: 'all' },
+              { label: 'Unpaid', value: 'unpaid' },
+              { label: 'Partial', value: 'partial' },
+              { label: 'Paid', value: 'paid' },
+            ]}
+          />
+          <TextInput
+            placeholder="Search bills"
+            leftSection={<IconSearch size={14} />}
+            value={query}
+            onChange={(e) => setQuery(e.currentTarget.value)}
+            style={{ flex: 1, minWidth: 200 }}
+          />
+        </Group>
+      </Card>
       {filtered.length === 0 ? (
         <Text c="dimmed" ta="center" py="xl">
           No bills match.

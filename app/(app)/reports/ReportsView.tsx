@@ -1,25 +1,17 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import {
-  Button,
-  Card,
-  Group,
-  SimpleGrid,
-  Stack,
-  Text,
-  Title,
-} from '@mantine/core';
+import { Button, Group, SimpleGrid, Stack, Text } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
 import { AreaChart, DonutChart } from '@mantine/charts';
+import { IconCoin, IconReceipt2, IconScale } from '@tabler/icons-react';
 import dayjs from 'dayjs';
 import { formatCurrency } from '@/lib/format';
-import {
-  formatPayPeriodLabel,
-  getCurrentPayPeriod,
-  getPayPeriodForDate,
-} from '@/lib/pay-period';
+import { getCurrentPayPeriod, getPayPeriodForDate } from '@/lib/pay-period';
 import type { Bill, Income } from '@/types/database';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { SectionCard } from '@/components/ui/SectionCard';
+import { StatCard } from '@/components/ui/StatCard';
 
 type Props = {
   bills: Bill[];
@@ -41,34 +33,39 @@ const TEAL_PALETTE = [
   'gray.5',
 ];
 
+const fmt = (d: dayjs.Dayjs | Date) => dayjs(d).format('YYYY-MM-DD');
+
 export function ReportsView({ bills, income, payAnchor }: Props) {
-  const today = new Date();
-  const defaultStart = dayjs(today).subtract(30, 'day').toDate();
-  const [range, setRange] = useState<[Date | null, Date | null]>([defaultStart, today]);
+  const today = dayjs();
+  const defaultStart = today.subtract(30, 'day');
+  const [range, setRange] = useState<[string | null, string | null]>([
+    fmt(defaultStart),
+    fmt(today),
+  ]);
 
   function applyPreset(p: Preset) {
     const now = dayjs();
     if (p === 'this_period' && payAnchor) {
       const period = getCurrentPayPeriod(payAnchor, now.toDate());
-      setRange([period.start, period.end]);
+      setRange([fmt(period.start), fmt(period.end)]);
       return;
     }
     if (p === 'last_period' && payAnchor) {
       const cur = getCurrentPayPeriod(payAnchor, now.toDate());
       const prev = getPayPeriodForDate(payAnchor, dayjs(cur.start).subtract(1, 'day').toDate());
-      setRange([prev.start, prev.end]);
+      setRange([fmt(prev.start), fmt(prev.end)]);
       return;
     }
     if (p === 'this_month') {
-      setRange([now.startOf('month').toDate(), now.endOf('month').toDate()]);
+      setRange([fmt(now.startOf('month')), fmt(now.endOf('month'))]);
       return;
     }
     if (p === 'last_3_months') {
-      setRange([now.subtract(3, 'month').startOf('day').toDate(), now.toDate()]);
+      setRange([fmt(now.subtract(3, 'month').startOf('day')), fmt(now)]);
       return;
     }
     if (p === 'ytd') {
-      setRange([now.startOf('year').toDate(), now.toDate()]);
+      setRange([fmt(now.startOf('year')), fmt(now)]);
     }
   }
 
@@ -139,32 +136,29 @@ export function ReportsView({ bills, income, payAnchor }: Props) {
   }, [filtered, range]);
 
   return (
-    <Stack gap="md">
-      <div>
-        <Title order={2}>Reports</Title>
-        <Text c="dimmed">Filter by any date range.</Text>
-      </div>
+    <Stack gap="lg">
+      <PageHeader title="Reports" description="Filter by any date range." />
 
-      <Card>
+      <SectionCard title="Date range">
         <Stack>
           <Group gap="xs" wrap="wrap">
             {payAnchor && (
               <>
-                <Button size="xs" variant="default" onClick={() => applyPreset('this_period')}>
+                <Button size="xs" variant="light" radius="xl" onClick={() => applyPreset('this_period')}>
                   This pay period
                 </Button>
-                <Button size="xs" variant="default" onClick={() => applyPreset('last_period')}>
+                <Button size="xs" variant="light" radius="xl" onClick={() => applyPreset('last_period')}>
                   Last pay period
                 </Button>
               </>
             )}
-            <Button size="xs" variant="default" onClick={() => applyPreset('this_month')}>
+            <Button size="xs" variant="light" radius="xl" onClick={() => applyPreset('this_month')}>
               This month
             </Button>
-            <Button size="xs" variant="default" onClick={() => applyPreset('last_3_months')}>
+            <Button size="xs" variant="light" radius="xl" onClick={() => applyPreset('last_3_months')}>
               Last 3 months
             </Button>
-            <Button size="xs" variant="default" onClick={() => applyPreset('ytd')}>
+            <Button size="xs" variant="light" radius="xl" onClick={() => applyPreset('ytd')}>
               Year to date
             </Button>
           </Group>
@@ -172,58 +166,42 @@ export function ReportsView({ bills, income, payAnchor }: Props) {
             type="range"
             label="Custom range"
             value={range}
-            onChange={(v) => {
-              const [a, b] = v as [Date | string | null, Date | string | null];
-              setRange([a ? new Date(a) : null, b ? new Date(b) : null]);
-            }}
+            onChange={setRange}
             allowSingleDateInRange
           />
-          {payAnchor && range[0] && range[1] && (
+          {range[0] && range[1] && (
             <Text size="xs" c="dimmed">
-              Range:{' '}
-              {formatPayPeriodLabel({
-                index: 0,
-                start: range[0],
-                end: range[1],
-                payDate: range[0],
-              })}
+              {dayjs(range[0]).format('MMM D, YYYY')} – {dayjs(range[1]).format('MMM D, YYYY')}
             </Text>
           )}
         </Stack>
-      </Card>
+      </SectionCard>
 
       <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
-        <Card>
-          <Text size="xs" c="dimmed" tt="uppercase">
-            Bills total
-          </Text>
-          <Title order={3} mt={4}>
-            {formatCurrency(billsTotal)}
-          </Title>
-        </Card>
-        <Card>
-          <Text size="xs" c="dimmed" tt="uppercase">
-            Income total
-          </Text>
-          <Title order={3} mt={4} c="teal">
-            {formatCurrency(incomeTotal)}
-          </Title>
-        </Card>
-        <Card>
-          <Text size="xs" c="dimmed" tt="uppercase">
-            Net
-          </Text>
-          <Title order={3} mt={4} c={net >= 0 ? 'teal' : 'red'}>
-            {formatCurrency(net)}
-          </Title>
-        </Card>
+        <StatCard
+          label="Bills total"
+          value={formatCurrency(billsTotal)}
+          icon={<IconReceipt2 size={22} />}
+          color="grape"
+        />
+        <StatCard
+          label="Income total"
+          value={formatCurrency(incomeTotal)}
+          icon={<IconCoin size={22} />}
+          color="teal"
+          valueColor="teal"
+        />
+        <StatCard
+          label="Net"
+          value={formatCurrency(net)}
+          icon={<IconScale size={22} />}
+          color={net >= 0 ? 'teal' : 'red'}
+          valueColor={net >= 0 ? 'teal' : 'red'}
+        />
       </SimpleGrid>
 
       <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
-        <Card>
-          <Title order={4} mb="sm">
-            Bills by category
-          </Title>
+        <SectionCard title="Bills by category">
           {categoryData.length === 0 ? (
             <Text c="dimmed" size="sm">
               No bills in this range.
@@ -240,12 +218,9 @@ export function ReportsView({ bills, income, payAnchor }: Props) {
               />
             </Group>
           )}
-        </Card>
+        </SectionCard>
 
-        <Card>
-          <Title order={4} mb="sm">
-            Cashflow trend
-          </Title>
+        <SectionCard title="Cashflow trend">
           {trendData.length === 0 ? (
             <Text c="dimmed" size="sm">
               No data in this range.
@@ -264,7 +239,7 @@ export function ReportsView({ bills, income, payAnchor }: Props) {
               valueFormatter={(v) => `$${v.toFixed(0)}`}
             />
           )}
-        </Card>
+        </SectionCard>
       </SimpleGrid>
     </Stack>
   );

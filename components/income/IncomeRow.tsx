@@ -36,12 +36,7 @@ export function IncomeRow({ income }: { income: Income }) {
   }
 
   return (
-    <Group
-      justify="space-between"
-      wrap="nowrap"
-      py="sm"
-      style={{ borderBottom: '1px solid var(--mantine-color-default-border)' }}
-    >
+    <Group justify="space-between" wrap="nowrap" w="100%">
       <Stack gap={0} style={{ minWidth: 0 }}>
         <Group gap="xs" wrap="nowrap">
           <Text fw={500} truncate>

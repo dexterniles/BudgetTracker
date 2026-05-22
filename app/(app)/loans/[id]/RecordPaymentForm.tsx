@@ -8,6 +8,7 @@ import dayjs from 'dayjs';
 import { recordLoanPayment } from '@/app/(app)/loans/actions';
 import { formatCurrency } from '@/lib/format';
 import { splitPayment } from '@/lib/amortization';
+import { SectionCard } from '@/components/ui/SectionCard';
 
 type Props = {
   loanId: string;
@@ -19,7 +20,7 @@ type Props = {
 export function RecordPaymentForm({ loanId, currentBalance, apr, minimumPayment }: Props) {
   const [amount, setAmount] = useState<number | string>(minimumPayment || '');
   const [extra, setExtra] = useState<number | string>('');
-  const [date, setDate] = useState<Date | null>(new Date());
+  const [date, setDate] = useState<string | null>(dayjs().format('YYYY-MM-DD'));
   const [pending, startTransition] = useTransition();
 
   const amtNum = Number(amount || 0);
@@ -38,7 +39,7 @@ export function RecordPaymentForm({ loanId, currentBalance, apr, minimumPayment 
     const fd = new FormData();
     fd.set('amount', String(amtNum));
     fd.set('extra_principal', String(extraNum || 0));
-    fd.set('payment_date', dayjs(date).format('YYYY-MM-DD'));
+    fd.set('payment_date', date);
     startTransition(async () => {
       try {
         await recordLoanPayment(loanId, fd);
@@ -54,10 +55,9 @@ export function RecordPaymentForm({ loanId, currentBalance, apr, minimumPayment 
   }
 
   return (
-    <Card>
+    <SectionCard title="Record a payment">
       <form onSubmit={handleSubmit}>
         <Stack>
-          <Text fw={600}>Record a payment</Text>
           <Group grow>
             <NumberInput
               label="Payment amount"
@@ -81,7 +81,7 @@ export function RecordPaymentForm({ loanId, currentBalance, apr, minimumPayment 
             <DatePickerInput
               label="Date"
               value={date}
-              onChange={(v) => setDate(v ? new Date(v) : null)}
+              onChange={setDate}
               required
             />
           </Group>
@@ -118,6 +118,6 @@ export function RecordPaymentForm({ loanId, currentBalance, apr, minimumPayment 
           </Group>
         </Stack>
       </form>
-    </Card>
+    </SectionCard>
   );
 }

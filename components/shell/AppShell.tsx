@@ -5,15 +5,14 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
   ActionIcon,
   AppShell as MantineAppShell,
-  Box,
   Burger,
+  Divider,
   Group,
   Menu,
-  NavLink,
   ScrollArea,
   Stack,
   Text,
-  Title,
+  ThemeIcon,
   UnstyledButton,
   useMantineColorScheme,
 } from '@mantine/core';
@@ -22,6 +21,7 @@ import {
   IconCalendar,
   IconCash,
   IconChartBar,
+  IconCoin,
   IconLayoutDashboard,
   IconLogout,
   IconMoon,
@@ -33,11 +33,8 @@ import {
 } from '@tabler/icons-react';
 import { createClient } from '@/lib/supabase/client';
 
-type NavItem = {
-  label: string;
-  href: string;
-  icon: React.ComponentType<{ size?: number | string; stroke?: number }>;
-};
+type IconComp = React.ComponentType<{ size?: number | string; stroke?: number }>;
+type NavItem = { label: string; href: string; icon: IconComp };
 
 const NAV: NavItem[] = [
   { label: 'Dashboard', href: '/', icon: IconLayoutDashboard },
@@ -48,7 +45,37 @@ const NAV: NavItem[] = [
   { label: 'Reports', href: '/reports', icon: IconChartBar },
 ];
 
+const SECONDARY_NAV: NavItem[] = [{ label: 'Settings', href: '/settings', icon: IconSettings }];
+
 const MOBILE_TABS = NAV.slice(0, 4);
+
+function SidebarItem({
+  item,
+  active,
+  onClick,
+}: {
+  item: NavItem;
+  active: boolean;
+  onClick?: () => void;
+}) {
+  const Icon = item.icon;
+  return (
+    <UnstyledButton
+      component={Link}
+      href={item.href}
+      onClick={onClick}
+      className="sidebar-item"
+      data-active={active || undefined}
+    >
+      <Group gap="sm" wrap="nowrap">
+        <Icon size={18} />
+        <Text size="sm" fw={500}>
+          {item.label}
+        </Text>
+      </Group>
+    </UnstyledButton>
+  );
+}
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -69,25 +96,36 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <MantineAppShell
-      header={{ height: 56 }}
+      header={{ height: 60 }}
       navbar={{
-        width: 240,
+        width: 248,
         breakpoint: 'sm',
         collapsed: { mobile: !opened, desktop: false },
       }}
-      footer={isMobile ? { height: 60 } : undefined}
-      padding="md"
+      footer={isMobile ? { height: 64 } : undefined}
+      padding="lg"
     >
-      <MantineAppShell.Header>
-        <Group h="100%" px="md" justify="space-between">
+      <MantineAppShell.Header
+        withBorder={false}
+        style={{ borderBottom: '1px solid var(--mantine-color-default-border)' }}
+      >
+        <Group h="100%" px="lg" justify="space-between">
           <Group gap="sm">
             <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
-            <Title order={4}>Budget Tracker</Title>
+            <ThemeIcon variant="light" color="teal" size={32} radius="md">
+              <IconCoin size={18} />
+            </ThemeIcon>
+            <Text fw={700} size="md">
+              Budget
+              <Text component="span" c="teal" inherit>
+                Tracker
+              </Text>
+            </Text>
           </Group>
           <Group gap="xs">
-            <Menu shadow="md" width={200} position="bottom-end">
+            <Menu shadow="md" width={200} position="bottom-end" radius="md">
               <Menu.Target>
-                <ActionIcon variant="filled" color="teal" size="lg" radius="xl" aria-label="Add">
+                <ActionIcon variant="filled" color="teal" size="lg" radius="md" aria-label="Add">
                   <IconPlus size={18} />
                 </ActionIcon>
               </Menu.Target>
@@ -106,6 +144,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </Menu>
             <ActionIcon
               variant="subtle"
+              color="gray"
               onClick={toggleColorScheme}
               size="lg"
               aria-label="Toggle color scheme"
@@ -116,16 +155,27 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </Group>
       </MantineAppShell.Header>
 
-      <MantineAppShell.Navbar p="xs">
+      <MantineAppShell.Navbar
+        p="md"
+        withBorder={false}
+        style={{ borderRight: '1px solid var(--mantine-color-default-border)' }}
+      >
         <MantineAppShell.Section grow component={ScrollArea}>
+          <Text
+            size="xs"
+            c="dimmed"
+            tt="uppercase"
+            fw={600}
+            mb="xs"
+            style={{ letterSpacing: 0.4 }}
+          >
+            Menu
+          </Text>
           <Stack gap={4}>
             {NAV.map((item) => (
-              <NavLink
+              <SidebarItem
                 key={item.href}
-                component={Link}
-                href={item.href}
-                label={item.label}
-                leftSection={<item.icon size={18} />}
+                item={item}
                 active={isActive(item.href)}
                 onClick={close}
               />
@@ -133,28 +183,38 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </Stack>
         </MantineAppShell.Section>
         <MantineAppShell.Section>
+          <Divider my="sm" />
           <Stack gap={4}>
-            <NavLink
-              component={Link}
-              href="/settings"
-              label="Settings"
-              leftSection={<IconSettings size={18} />}
-              active={isActive('/settings')}
-              onClick={close}
-            />
-            <NavLink
-              label="Sign out"
-              leftSection={<IconLogout size={18} />}
+            {SECONDARY_NAV.map((item) => (
+              <SidebarItem
+                key={item.href}
+                item={item}
+                active={isActive(item.href)}
+                onClick={close}
+              />
+            ))}
+            <UnstyledButton
               onClick={handleSignOut}
-            />
+              className="sidebar-item"
+            >
+              <Group gap="sm" wrap="nowrap">
+                <IconLogout size={18} />
+                <Text size="sm" fw={500}>
+                  Sign out
+                </Text>
+              </Group>
+            </UnstyledButton>
           </Stack>
         </MantineAppShell.Section>
       </MantineAppShell.Navbar>
 
-      <MantineAppShell.Main pb={isMobile ? 80 : undefined}>{children}</MantineAppShell.Main>
+      <MantineAppShell.Main pb={isMobile ? 84 : undefined}>{children}</MantineAppShell.Main>
 
       {isMobile && (
-        <MantineAppShell.Footer>
+        <MantineAppShell.Footer
+          withBorder={false}
+          style={{ borderTop: '1px solid var(--mantine-color-default-border)' }}
+        >
           <Group h="100%" gap={0} grow preventGrowOverflow={false}>
             {MOBILE_TABS.map((item) => {
               const Icon = item.icon;
@@ -164,36 +224,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   key={item.href}
                   component={Link}
                   href={item.href}
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    height: '100%',
-                    color: active ? 'var(--mantine-color-teal-6)' : 'var(--mantine-color-dimmed)',
-                  }}
+                  className="mobile-tab"
+                  data-active={active || undefined}
                 >
                   <Icon size={20} />
-                  <Text size="xs" mt={2}>
+                  <Text size="xs" mt={4} fw={500}>
                     {item.label}
                   </Text>
                 </UnstyledButton>
               );
             })}
-            <Menu position="top-end" shadow="md">
+            <Menu position="top-end" shadow="md" radius="md">
               <Menu.Target>
-                <UnstyledButton
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    height: '100%',
-                    color: 'var(--mantine-color-dimmed)',
-                  }}
-                >
+                <UnstyledButton className="mobile-tab">
                   <IconPlus size={20} />
-                  <Text size="xs" mt={2}>
+                  <Text size="xs" mt={4} fw={500}>
                     Add
                   </Text>
                 </UnstyledButton>
@@ -213,7 +258,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </Group>
         </MantineAppShell.Footer>
       )}
-      <Box />
     </MantineAppShell>
   );
 }

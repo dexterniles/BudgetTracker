@@ -26,8 +26,8 @@ export function BillForm({ bill }: Props) {
   const [name, setName] = useState(bill?.name ?? '');
   const [description, setDescription] = useState(bill?.description ?? '');
   const [amount, setAmount] = useState<number | string>(bill?.amount ?? '');
-  const [dueDate, setDueDate] = useState<Date | null>(
-    bill?.due_date ? dayjs(bill.due_date).toDate() : new Date(),
+  const [dueDate, setDueDate] = useState<string | null>(
+    bill?.due_date ?? dayjs().format('YYYY-MM-DD'),
   );
   const [category, setCategory] = useState(bill?.category ?? '');
   const [isInstallment, setIsInstallment] = useState(bill?.is_installment ?? false);
@@ -49,7 +49,7 @@ export function BillForm({ bill }: Props) {
     fd.set('name', name);
     fd.set('description', description);
     fd.set('amount', String(amount));
-    fd.set('due_date', dayjs(dueDate).format('YYYY-MM-DD'));
+    fd.set('due_date', dueDate);
     fd.set('category', category);
     fd.set('is_installment', isInstallment ? 'true' : '');
     if (isInstallment) {
@@ -101,7 +101,7 @@ export function BillForm({ bill }: Props) {
           <DatePickerInput
             label="Due date"
             value={dueDate}
-            onChange={(v) => setDueDate(v ? new Date(v) : null)}
+            onChange={setDueDate}
             required
           />
         </Group>

@@ -34,8 +34,8 @@ export function LoanForm({ loan }: { loan?: Loan }) {
   const [balance, setBalance] = useState<number | string>(loan?.current_balance ?? '');
   const [apr, setApr] = useState<number | string>(loan?.apr ?? '');
   const [minPayment, setMinPayment] = useState<number | string>(loan?.minimum_payment ?? '');
-  const [startDate, setStartDate] = useState<Date | null>(
-    loan?.start_date ? dayjs(loan.start_date).toDate() : new Date(),
+  const [startDate, setStartDate] = useState<string | null>(
+    loan?.start_date ?? dayjs().format('YYYY-MM-DD'),
   );
   const [pending, startTransition] = useTransition();
 
@@ -53,7 +53,7 @@ export function LoanForm({ loan }: { loan?: Loan }) {
     fd.set('current_balance', String(balance));
     fd.set('apr', String(apr || 0));
     fd.set('minimum_payment', String(minPayment || 0));
-    fd.set('start_date', dayjs(startDate).format('YYYY-MM-DD'));
+    fd.set('start_date', startDate);
 
     startTransition(async () => {
       try {
@@ -142,7 +142,7 @@ export function LoanForm({ loan }: { loan?: Loan }) {
           <DatePickerInput
             label="Start date"
             value={startDate}
-            onChange={(v) => setStartDate(v ? new Date(v) : null)}
+            onChange={setStartDate}
             required
           />
         </Group>

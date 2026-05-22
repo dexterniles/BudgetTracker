@@ -1,16 +1,20 @@
-import Link from 'next/link';
 import {
   Alert,
-  Anchor,
-  Button,
-  Card,
   Group,
   SimpleGrid,
   Stack,
   Text,
-  Title,
 } from '@mantine/core';
-import { IconAlertCircle, IconPlus } from '@tabler/icons-react';
+import {
+  IconAlertCircle,
+  IconCalendarStats,
+  IconCash,
+  IconCoin,
+  IconPlus,
+  IconReceipt2,
+  IconScale,
+  IconWallet,
+} from '@tabler/icons-react';
 import dayjs from 'dayjs';
 import { createClient } from '@/lib/supabase/server';
 import { getUserSettings } from '@/lib/settings';
@@ -22,6 +26,11 @@ import {
 import { formatCurrency } from '@/lib/format';
 import { BillCard } from '@/components/bills/BillCard';
 import { PayPeriodBarChart } from '@/components/charts/PayPeriodBarChart';
+import { LinkAnchor } from '@/components/ui/links';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { SectionCard } from '@/components/ui/SectionCard';
+import { StatCard } from '@/components/ui/StatCard';
+import { QuickAction } from '@/components/ui/QuickAction';
 import type { Bill, Income } from '@/types/database';
 
 const PERIODS_AHEAD = 6;
@@ -31,13 +40,11 @@ export default async function DashboardPage() {
   if (!settings) {
     return (
       <Stack gap="md">
-        <Title order={2}>Welcome to Budget Tracker</Title>
-        <Alert icon={<IconAlertCircle size={16} />} color="teal" title="Set your pay schedule">
+        <PageHeader title="Welcome to Budget Tracker" />
+        <Alert icon={<IconAlertCircle size={16} />} color="teal" title="Set your pay schedule" radius="lg">
           Before the dashboard can show pay-period totals, set a pay anchor date in{' '}
-          <Anchor component={Link} href="/settings">
-            Settings
-          </Anchor>
-          . Pick any recent paycheck date — periods are 14-day windows from there.
+          <LinkAnchor href="/settings">Settings</LinkAnchor>. Pick any recent paycheck date —
+          periods are 14-day windows from there.
         </Alert>
       </Stack>
     );
@@ -88,10 +95,13 @@ export default async function DashboardPage() {
         .limit(5),
     ]);
 
-  const billsThisPeriod = (periodBills ?? []).filter((b) => {
+  const billsThisPeriod = ((periodBills ?? []) as Bill[]).filter((b) => {
     const d = dayjs(b.due_date);
-    return d.isSame(current.start, 'day') || (d.isAfter(current.start) && d.isBefore(dayjs(current.end).add(1, 'day')));
-  }) as Bill[];
+    return (
+      d.isSame(current.start, 'day') ||
+      (d.isAfter(current.start) && d.isBefore(dayjs(current.end).add(1, 'day')))
+    );
+  });
 
   const currentBillsTotal = billsThisPeriod.reduce(
     (s, b) => s + Math.max(0, Number(b.amount) - Number(b.amount_paid)),
@@ -104,7 +114,7 @@ export default async function DashboardPage() {
   const net = currentIncomeTotal - currentBillsTotal;
 
   const chartData = next6.map((p) => {
-    const total = (periodBills ?? [])
+    const total = ((periodBills ?? []) as Bill[])
       .filter((b) => {
         const d = dayjs(b.due_date);
         return (
@@ -118,57 +128,75 @@ export default async function DashboardPage() {
 
   return (
     <Stack gap="lg">
-      <Group justify="space-between" align="flex-end">
-        <div>
-          <Title order={2}>Dashboard</Title>
-          <Text c="dimmed">Current pay period: {formatPayPeriodLabel(current)}</Text>
-        </div>
-      </Group>
+      <PageHeader
+        title="Dashboard"
+        description={`Current pay period: ${formatPayPeriodLabel(current)}`}
+      />
 
       <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
-        <Card>
-          <Text size="xs" c="dimmed" tt="uppercase">
-            Bills due this period
-          </Text>
-          <Title order={3} mt={4}>
-            {formatCurrency(currentBillsTotal)}
-          </Title>
-          <Text size="xs" c="dimmed">
-            {billsThisPeriod.filter((b) => b.status !== 'paid').length} unpaid
-          </Text>
-        </Card>
-        <Card>
-          <Text size="xs" c="dimmed" tt="uppercase">
-            Income this period
-          </Text>
-          <Title order={3} mt={4} c="teal">
-            {formatCurrency(currentIncomeTotal)}
-          </Title>
-          <Text size="xs" c="dimmed">
-            {(periodIncome ?? []).length} entries
-          </Text>
-        </Card>
-        <Card>
-          <Text size="xs" c="dimmed" tt="uppercase">
-            Net
-          </Text>
-          <Title order={3} mt={4} c={net >= 0 ? 'teal' : 'red'}>
-            {formatCurrency(net)}
-          </Title>
-          <Text size="xs" c="dimmed">
-            {net >= 0 ? 'Surplus' : 'Shortfall'}
-          </Text>
-        </Card>
+        <StatCard
+          label="Bills due this period"
+          value={formatCurrency(currentBillsTotal)}
+          sublabel={`${billsThisPeriod.filter((b) => b.status !== 'paid').length} unpaid`}
+          icon={<IconReceipt2 size={22} />}
+          color="grape"
+        />
+        <StatCard
+          label="Income this period"
+          value={formatCurrency(currentIncomeTotal)}
+          sublabel={`${(periodIncome ?? []).length} entries`}
+          icon={<IconCoin size={22} />}
+          color="teal"
+          valueColor="teal"
+        />
+        <StatCard
+          label="Net"
+          value={formatCurrency(net)}
+          sublabel={net >= 0 ? 'Surplus' : 'Shortfall'}
+          icon={<IconScale size={22} />}
+          color={net >= 0 ? 'teal' : 'red'}
+          valueColor={net >= 0 ? 'teal' : 'red'}
+        />
       </SimpleGrid>
 
+      <SectionCard title="Quick access">
+        <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="sm">
+          <QuickAction
+            href="/bills/new"
+            icon={<IconReceipt2 size={20} />}
+            label="New bill"
+            color="grape"
+          />
+          <QuickAction
+            href="/income/new"
+            icon={<IconCash size={20} />}
+            label="New income"
+            color="teal"
+          />
+          <QuickAction
+            href="/loans/new"
+            icon={<IconWallet size={20} />}
+            label="New loan"
+            color="indigo"
+          />
+          <QuickAction
+            href="/calendar"
+            icon={<IconCalendarStats size={20} />}
+            label="Calendar"
+            color="orange"
+          />
+        </SimpleGrid>
+      </SectionCard>
+
       <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
-        <Card>
-          <Group justify="space-between" mb="sm">
-            <Title order={4}>Upcoming (next 7 days)</Title>
-            <Anchor component={Link} href="/bills" size="sm">
+        <SectionCard
+          title="Upcoming (next 7 days)"
+          action={
+            <LinkAnchor href="/bills" size="sm">
               All bills →
-            </Anchor>
-          </Group>
+            </LinkAnchor>
+          }
+        >
           {(upcoming ?? []).length === 0 ? (
             <Text c="dimmed" size="sm">
               Nothing due in the next 7 days.
@@ -180,12 +208,9 @@ export default async function DashboardPage() {
               ))}
             </Stack>
           )}
-        </Card>
+        </SectionCard>
 
-        <Card>
-          <Title order={4} mb="sm">
-            Bills per pay period
-          </Title>
+        <SectionCard title="Bills per pay period">
           {chartData.every((d) => d.bills === 0) ? (
             <Text c="dimmed" size="sm">
               No bills scheduled in the next {PERIODS_AHEAD} pay periods.
@@ -193,39 +218,37 @@ export default async function DashboardPage() {
           ) : (
             <PayPeriodBarChart data={chartData} />
           )}
-        </Card>
+        </SectionCard>
       </SimpleGrid>
 
-      <Card>
-        <Group justify="space-between" mb="sm">
-          <Title order={4}>Recent income</Title>
-          <Group>
-            <Button
-              component={Link}
-              href="/income/new"
-              size="xs"
-              variant="light"
-              leftSection={<IconPlus size={14} />}
-            >
-              Add
-            </Button>
-            <Anchor component={Link} href="/income" size="sm">
-              All →
-            </Anchor>
-          </Group>
-        </Group>
+      <SectionCard
+        title="Recent income"
+        action={
+          <LinkAnchor href="/income" size="sm">
+            All →
+          </LinkAnchor>
+        }
+      >
         {(recentIncome ?? []).length === 0 ? (
-          <Text c="dimmed" size="sm">
-            No income recorded yet.
-          </Text>
+          <Group gap="xs">
+            <IconPlus size={14} />
+            <LinkAnchor href="/income/new" size="sm">
+              Add your first income
+            </LinkAnchor>
+          </Group>
         ) : (
-          <Stack gap={4}>
-            {((recentIncome as Income[] | null) ?? []).map((i) => (
+          <Stack gap={0}>
+            {((recentIncome as Income[] | null) ?? []).map((i, idx, arr) => (
               <Group
                 key={i.id}
                 justify="space-between"
-                py="xs"
-                style={{ borderBottom: '1px solid var(--mantine-color-default-border)' }}
+                py="sm"
+                style={{
+                  borderBottom:
+                    idx < arr.length - 1
+                      ? '1px solid var(--mantine-color-default-border)'
+                      : 'none',
+                }}
               >
                 <Stack gap={0}>
                   <Text fw={500}>{i.source}</Text>
@@ -240,7 +263,7 @@ export default async function DashboardPage() {
             ))}
           </Stack>
         )}
-      </Card>
+      </SectionCard>
     </Stack>
   );
 }

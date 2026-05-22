@@ -23,8 +23,8 @@ export function IncomeForm({ income }: Props) {
   const router = useRouter();
   const [source, setSource] = useState(income?.source ?? '');
   const [amount, setAmount] = useState<number | string>(income?.amount ?? '');
-  const [date, setDate] = useState<Date | null>(
-    income?.received_date ? dayjs(income.received_date).toDate() : new Date(),
+  const [date, setDate] = useState<string | null>(
+    income?.received_date ?? dayjs().format('YYYY-MM-DD'),
   );
   const [description, setDescription] = useState(income?.description ?? '');
   const [isMisc, setIsMisc] = useState(income?.is_misc ?? false);
@@ -39,7 +39,7 @@ export function IncomeForm({ income }: Props) {
     const fd = new FormData();
     fd.set('source', source);
     fd.set('amount', String(amount));
-    fd.set('received_date', dayjs(date).format('YYYY-MM-DD'));
+    fd.set('received_date', date);
     fd.set('description', description);
     fd.set('is_misc', isMisc ? 'true' : '');
     startTransition(async () => {
@@ -85,7 +85,7 @@ export function IncomeForm({ income }: Props) {
           <DatePickerInput
             label="Date received"
             value={date}
-            onChange={(v) => setDate(v ? new Date(v) : null)}
+            onChange={setDate}
             required
           />
         </Group>

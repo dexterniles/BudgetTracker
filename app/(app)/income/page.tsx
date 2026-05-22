@@ -1,10 +1,12 @@
-import Link from 'next/link';
-import { Button, Card, Group, Stack, Text, Title } from '@mantine/core';
+import { Card, Group, Stack, Text } from '@mantine/core';
 import { IconPlus } from '@tabler/icons-react';
 import { createClient } from '@/lib/supabase/server';
 import { formatCurrency } from '@/lib/format';
 import type { Income } from '@/types/database';
 import { IncomeRow } from '@/components/income/IncomeRow';
+import { LinkButton } from '@/components/ui/links';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { SectionCard } from '@/components/ui/SectionCard';
 
 export default async function IncomePage() {
   const supabase = await createClient();
@@ -23,18 +25,16 @@ export default async function IncomePage() {
   const total = income.reduce((sum, i) => sum + Number(i.amount), 0);
 
   return (
-    <Stack gap="md">
-      <Group justify="space-between" align="flex-end">
-        <div>
-          <Title order={2}>Income</Title>
-          <Text c="dimmed">
-            {income.length} entries · {formatCurrency(total)} total
-          </Text>
-        </div>
-        <Button component={Link} href="/income/new" leftSection={<IconPlus size={16} />}>
-          New income
-        </Button>
-      </Group>
+    <Stack gap="lg">
+      <PageHeader
+        title="Income"
+        description={`${income.length} entries · ${formatCurrency(total)} total`}
+        action={
+          <LinkButton href="/income/new" leftSection={<IconPlus size={16} />}>
+            New income
+          </LinkButton>
+        }
+      />
 
       {income.length === 0 ? (
         <Card p="xl">
@@ -43,19 +43,31 @@ export default async function IncomePage() {
             <Text c="dimmed" size="sm">
               Add your first paycheck or misc income.
             </Text>
-            <Button component={Link} href="/income/new" leftSection={<IconPlus size={16} />}>
+            <LinkButton href="/income/new" leftSection={<IconPlus size={16} />}>
               Add income
-            </Button>
+            </LinkButton>
           </Stack>
         </Card>
       ) : (
-        <Card>
+        <SectionCard title="All income" padding={0}>
           <Stack gap={0}>
-            {income.map((i) => (
-              <IncomeRow key={i.id} income={i} />
+            {income.map((i, idx) => (
+              <Group
+                key={i.id}
+                px="lg"
+                py="sm"
+                style={{
+                  borderBottom:
+                    idx < income.length - 1
+                      ? '1px solid var(--mantine-color-default-border)'
+                      : 'none',
+                }}
+              >
+                <IncomeRow income={i} />
+              </Group>
             ))}
           </Stack>
-        </Card>
+        </SectionCard>
       )}
     </Stack>
   );
