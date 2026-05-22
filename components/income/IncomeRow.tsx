@@ -4,8 +4,9 @@ import { useTransition } from 'react';
 import { ActionIcon, Badge, Group, Stack, Text } from '@mantine/core';
 import { modals } from '@mantine/modals';
 import { notifications } from '@mantine/notifications';
-import { IconTrash } from '@tabler/icons-react';
+import { IconPencil, IconTrash } from '@tabler/icons-react';
 import dayjs from 'dayjs';
+import NextLink from 'next/link';
 import { deleteIncome } from '@/app/(app)/income/actions';
 import { formatCurrency } from '@/lib/format';
 import type { Income } from '@/types/database';
@@ -39,7 +40,14 @@ export function IncomeRow({ income }: { income: Income }) {
     <Group justify="space-between" wrap="nowrap" w="100%">
       <Stack gap={0} style={{ minWidth: 0 }}>
         <Group gap="xs" wrap="nowrap">
-          <Text fw={500} truncate>
+          <Text
+            component={NextLink}
+            href={`/income/${income.id}`}
+            fw={500}
+            truncate
+            style={{ color: 'inherit', textDecoration: 'none' }}
+            className="income-source-link"
+          >
             {income.source}
           </Text>
           {income.is_misc && (
@@ -53,10 +61,19 @@ export function IncomeRow({ income }: { income: Income }) {
           {income.description ? ` · ${income.description}` : ''}
         </Text>
       </Stack>
-      <Group gap="sm" wrap="nowrap">
-        <Text fw={600} c="teal">
+      <Group gap={4} wrap="nowrap">
+        <Text fw={600} c="teal" mr="sm">
           +{formatCurrency(income.amount)}
         </Text>
+        <ActionIcon
+          component={NextLink}
+          href={`/income/${income.id}`}
+          variant="subtle"
+          color="gray"
+          aria-label="Edit"
+        >
+          <IconPencil size={14} />
+        </ActionIcon>
         <ActionIcon
           variant="subtle"
           color="red"

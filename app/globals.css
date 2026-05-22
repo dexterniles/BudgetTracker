@@ -103,6 +103,11 @@ a.mantine-Card-root:hover {
   color: var(--mantine-color-teal-4);
 }
 
+/* Income row source name turns teal on hover to hint it's clickable */
+.income-source-link:hover {
+  color: var(--mantine-color-teal-4) !important;
+}
+
 /* Inputs in dark mode get a filled feel, matched to the neutral palette */
 [data-mantine-color-scheme='dark'] .mantine-TextInput-input,
 [data-mantine-color-scheme='dark'] .mantine-Textarea-input,
